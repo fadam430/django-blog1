@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404 # type: ignore
+from django.shortcuts import render, get_object_or_404, reverse # type: ignore
 from django.views import generic # type: ignore
 from django.contrib import messages # type: ignore
-from .models import Post
+from django.http import HttpResponseRedirect # type: ignore
+from .models import Post, Comment
 from .forms import CommentForm
 
 # Create your views here.
@@ -54,33 +55,24 @@ def post_detail(request, slug):
 
 
 
+def comment_edit(request, slug, comment_id):
+    """
+    view to edit comments
+    """
+    if request.method == "POST":
 
+        queryset = Post.objects.filter(status=1)
+        post = get_object_or_404(queryset, slug=slug)
+        comment = get_object_or_404(Comment, pk=comment_id)
+        comment_form = CommentForm(data=request.POST, instance=comment)
 
+        if comment_form.is_valid() and comment.author == request.user:
+            comment = comment_form.save(commit=False)
+            comment.post = post
+            comment.approved = False
+            comment.save()
+            messages.add_message(request, messages.SUCCESS, 'Comment Updated!')
+        else:
+            messages.add_message(request, messages.ERROR, 'Error updating comment!')
 
-
-# class EventList(generic.ListView):
-#     model = Event
-#     template_name = "index.html"
-#     paginate_by = 12
-
-
-
-# def event_detail(request, event_id):
-#     """
-#     Renders the detail view of an event identified by its ID.
-    
-#     **Content**
-    
-#     ``event_detail``
-#         an instance of model : `blog.event`
-        
-#     **Template**
-    
-#     :template:`blog/event_detail.html`
-#     """
-    
-#     # Assuming there's an Event model similar to Post
-
-#     queryset = Event.objects.all()
-#     event = get_object_or_404(queryset, id=event_id)
-#     return render(request, 'events/event_detail.html', {'event': event})
+    return HttpResponseRedirect(reverse('post_detail', args=[slug]))
