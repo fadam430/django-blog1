@@ -105,7 +105,10 @@ body {
     margin-top: 5%;
     margin-left: 5%;
 }
-
+.profile-image {
+    width: 75%;
+    
+}
 .post-subtitle {
     margin-left: 5%;
     color: lightgray;
